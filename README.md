@@ -49,5 +49,6 @@ Automatically triggers after a successful route is displayed.
 1. **Clone the repository**
 
 ```bash
-git clone https://github.com/ArjunJayakrishnan-codes/Smart-Ambulance-Routing-System.git
-cd Smart-Ambulance-Routing-System
+git clone https://github.com/TIRTHANATH20/Ambulance-Routing-System.git
+cd Ambulance-Routing-System
+
