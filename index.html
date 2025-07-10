@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Ambulance Routing System</title>
+
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --primary: #1f2937;
+      --secondary: #3b82f6;
+      --accent: #2563eb;
+      --bg: #f9fafb;
+      --text: #111827;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    nav {
+      background: var(--primary);
+      color: white;
+      padding: 1.2rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    nav h1 {
+      font-size: 1.8rem;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    nav .tagline {
+      font-size: 0.95rem;
+      color: #cbd5e1;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 40px auto;
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+      animation: fadeIn 1s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .hero h2 {
+      font-size: 2.2rem;
+      color: var(--accent);
+    }
+
+    .hero p {
+      color: #475569;
+      font-size: 1.05rem;
+    }
+
+    .form-group {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 2rem;
+    }
+
+    input[type="text"] {
+      padding: 14px;
+      width: 60%;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      font-size: 1rem;
+    }
+
+    button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    button[type="submit"] {
+      background: var(--secondary);
+      color: white;
+    }
+
+    button#useCurrentLocation {
+      background: #e5e7eb;
+      color: #1f2937;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+    }
+
+    button:focus {
+      outline: 3px solid var(--accent);
+    }
+
+    #map {
+      height: 500px;
+      width: 100%;
+      border-radius: 12px;
+      margin-bottom: 30px;
+    }
+
+    .hospital-info {
+      background: #e0f2fe;
+      padding: 20px;
+      border-left: 6px solid var(--secondary);
+      border-radius: 12px;
+      margin-top: 20px;
+    }
+
+    .hospital-info h3 {
+      margin: 0 0 10px;
+    }
+
+    #spinner {
+      display: none;
+      margin: 20px auto;
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid var(--secondary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    #refreshBtn {
+      display: none;
+      margin: 30px auto 0;
+      background: #ef4444;
+      color: white;
+    }
+
+    #refreshBtn:hover {
+      background: #dc2626;
+    }
+
+    .legend {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: white;
+      padding: 10px 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      font-size: 0.9rem;
+      z-index: 999;
+    }
+
+    @media (max-width: 768px) {
+      input[type="text"] {
+        width: 100%;
+      }
+
+      .form-group {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <h1><i class="fas fa-ambulance"></i> Smart Ambulance Routing</h1>
+    <div class="tagline">Find the Fastest Route to Save Lives</div>
+  </nav>
+
+  <div class="container">
+    <div class="hero">
+      <h2><i class="fas fa-map-marked-alt"></i> Emergency Routing Assistance</h2>
+      <p>Enter the ambulance location or use your current location to find the nearest hospital instantly.</p>
+    </div>
+
+    <form id="ambulanceForm" class="form-group" aria-labelledby="ambulanceForm">
+      <input type="text" id="src_address" placeholder="Enter Ambulance Location" required aria-label="Enter ambulance location" />
+      <button type="submit" aria-label="Find nearest hospital"><i class="fas fa-search-location"></i> Find Hospital</button>
+      <button type="button" id="useCurrentLocation" aria-label="Use current location"><i class="fas fa-location-arrow"></i> Use My Location</button>
+    </form>
+
+    <div id="spinner" aria-hidden="true"></div>
+
+    <div id="map" role="region" aria-labelledby="map"></div>
+    <div class="legend" role="contentinfo">
+      <i class="fas fa-map-pin"></i> Ambulance & Hospital &nbsp;&nbsp; <i class="fas fa-route"></i> Route
+    </div>
+
+    <div id="info" aria-live="polite"></div>
+    <button id="refreshBtn" aria-label="Start a new search"><i class="fas fa-sync-alt"></i> New Search</button>
+  </div>
+
+  <script>
+    const map = L.map('map').setView([13.0827, 80.2707], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    let routeLine;
+
+    document.getElementById('ambulanceForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      searchHospital(document.getElementById('src_address').value);
+    });
+
+    document.getElementById('useCurrentLocation').addEventListener('click', () => {
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          const coords = `${position.coords.latitude},${position.coords.longitude}`;
+          document.getElementById('src_address').value = coords;
+          searchHospital(coords);
+        },
+        () => alert("Location access denied.")
+      );
+    });
+
+    function speakHospitalInfo(hName, hLat, hLon, distance, duration) {
+      const message = `The nearest hospital is ${hName}, located at latitude ${hLat.toFixed(4)} and longitude ${hLon.toFixed(4)}. The distance is approximately ${distance.toFixed(2)} kilometers, and the estimated time to reach is ${duration.toFixed(2)} minutes.`;
+      const speech = new SpeechSynthesisUtterance(message);
+      speech.lang = 'en-US';
+      speech.rate = 1;
+      speech.pitch = 1;
+      speech.volume = 1;
+      window.speechSynthesis.speak(speech);
+    }
+
+    function searchHospital(address) {
+      document.getElementById('spinner').style.display = 'block';
+      fetch('/find_hospital', {
+        method: 'POST',
+        body: new URLSearchParams({ 'src_address': address })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('spinner').style.display = 'none';
+        if (data.error) return alert(data.error);
+
+        map.eachLayer(layer => {
+          if (layer instanceof L.Marker || layer instanceof L.Polyline) map.removeLayer(layer);
+        });
+
+        const [srcLat, srcLon] = data.src_coords;
+        const { lat: hLat, lon: hLon, name: hName } = data.nearest_hospital;
+
+        L.marker([srcLat, srcLon]).addTo(map).bindPopup("🚑 Ambulance Location").openPopup();
+        L.marker([hLat, hLon]).addTo(map).bindPopup(`🏥 ${hName}`).openPopup();
+
+        routeLine = L.polyline(data.route_geometry.map(([lon, lat]) => [lat, lon]), {
+          color: 'blue',
+          weight: 5,
+          opacity: 0.7
+        }).addTo(map);
+
+        map.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
+
+        document.getElementById('info').innerHTML = `
+          <div class="hospital-info">
+            <h3><i class="fas fa-hospital"></i> Nearest Hospital</h3>
+            <p><strong>Name:</strong> ${hName}</p>
+            <p><strong>Location:</strong> ${hLat.toFixed(4)}, ${hLon.toFixed(4)}</p>
+            <p><strong>Distance:</strong> ${data.distance.toFixed(2)} km</p>
+            <p><strong>ETA:</strong> ${data.duration.toFixed(2)} minutes</p>
+          </div>
+        `;
+
+        speakHospitalInfo(hName, hLat, hLon, data.distance, data.duration);
+
+        document.getElementById('refreshBtn').style.display = 'block';
+      });
+    }
+
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+      document.getElementById('src_address').value = '';
+      document.getElementById('info').innerHTML = '';
+      document.getElementById('refreshBtn').style.display = 'none';
+      map.eachLayer(layer => {
+        if (layer instanceof L.Marker || layer instanceof L.Polyline) map.removeLayer(layer);
+      });
+    });
+  </script>
+</body>
+</html>
